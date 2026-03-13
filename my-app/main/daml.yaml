@@ -1,0 +1,8 @@
+sdk-version: 3.4.10
+name: my-app-main
+source: daml
+version: 0.0.2
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script

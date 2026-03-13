@@ -1,0 +1,56 @@
+module Transfer where
+
+import Coin
+import Daml.Script
+import DA.List (head)
+import DA.Text (isInfixOf)
+
+-- Скрипт перевода: Alice переводит 2 монеты Bob
+runTransfer : Script ()
+runTransfer = do
+  -- 1. Инициализируем стороны
+  parties <- listKnownParties
+  let findParty alias = do
+        case find (\p -> alias `isInfixOf` (show p.party)) parties of
+          Some p -> return p.party
+          None -> fail ("Party not found: " <> alias)
+
+  alice <- findParty "Alice"
+  bob <- findParty "Bob"
+  
+  debug $ "Alice Party ID: " <> show alice
+
+  let getBalance p = do
+        coins <- query @Coin p
+        pure $ sum $ map (\(_, c) -> c.amount) coins
+
+  -- Log Start Time and Initial Balances
+  tStart <- getTime
+  debug $ "=== Test Start: " <> show tStart <> " ==="
+  
+  balAliceBefore <- getBalance alice
+  balBobBefore <- getBalance bob
+  debug $ "Balances [BEFORE]: Alice=" <> show balAliceBefore <> ", Bob=" <> show balBobBefore
+
+  -- 2. Находим монеты, принадлежащие Alice
+  aliceCoins <- query @Coin alice
+  let coinCid = (head aliceCoins)._1
+  let coinData = (head aliceCoins)._2
+  
+  debug $ "Coin Input: " <> show coinCid <> " | Amount: " <> show coinData.amount
+
+  -- 3. Alice выполняет Transfer
+  debug $ "Action: Transferring 2.0 to Bob..."
+  newCoinCid <- submit alice do
+    exerciseCmd coinCid Transfer with
+      newOwner = bob
+      transferAmount = 2.0
+  
+  debug $ "Transaction Committed. New Coin CID (Bob): " <> show newCoinCid
+
+  -- Log Final Balances
+  balAliceAfter <- getBalance alice
+  balBobAfter <- getBalance bob
+  debug $ "Balances [AFTER]:  Alice=" <> show balAliceAfter <> ", Bob=" <> show balBobAfter
+  
+  return ()

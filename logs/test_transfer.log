@@ -1,0 +1,8 @@
+[DA.Internal.Prelude:555]: \"Alice Party ID: 'Alice::12206142f08ae3d17391775a265d64b947099160506e8e59f8f5120c787ed72117fa'\"
+[DA.Internal.Prelude:555]: \"=== Test Start: 2026-02-03T18:53:24.332219Z ===\"
+[DA.Internal.Prelude:555]: \"Balances [BEFORE]: Alice=20.0, Bob=0.0\"
+[DA.Internal.Prelude:555]: \"Coin Input: 005954170df0bdffa50ffc6b820e97728d8b156880219ca0f48f9fb9595f279beaca121220c6850e38d7b00f95cdccb0e39ae7b6cbb10fd50cb5eede2a7f85486fbda342e3 | Amount: 10.0\"
+[DA.Internal.Prelude:555]: \"Action: Transferring 2.0 to Bob...\"
+[DA.Internal.Prelude:555]: \"Transaction Committed. New Coin CID (Bob): (00b022a28d9f393e0abf9b14d6bbbcec88ceae31c3318b0751cd77c54ab1ceb98cca1212203e62859e298e8079cb0adf32c7fa41a87e4d5611683b37490eef555ab7973008,Some 0070c3eb691342baecc390017144ec0d4cc15b5f1f3b89590c2bb9dfe6c47ddbc0ca1212209af2e66e6504eca2be9d354ef62c58a5fac9d0c9797f1040e2e8218045ba1919)\"
+[DA.Internal.Prelude:555]: \"Balances [AFTER]:  Alice=18.0, Bob=2.0\"
+[INFO] [02/03/2026 18:53:25.095] [RunnerMain-pekko.actor.default-dispatcher-7] [CoordinatedShutdown(pekko://RunnerMain)] Running CoordinatedShutdown with reason [ActorSystemTerminateReason]

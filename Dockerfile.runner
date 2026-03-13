@@ -1,0 +1,29 @@
+FROM eclipse-temurin:21-jdk
+
+# Install dependencies
+ENV TERM=dumb
+RUN apt-get update && apt-get install -y curl tar gzip bash git && rm -rf /var/lib/apt/lists/*
+
+# Install Daml SDK 2.10.3 Manually
+# The installer script is flaky in some containers, so we do it manually.
+ARG SDK_VERSION=3.4.10
+
+# Install Daml SDK using official installer
+RUN curl -sSL https://get.daml.com | sh -s ${SDK_VERSION}
+
+# Add Daml to PATH
+ENV PATH="/root/.daml/bin:$PATH"
+
+# Setup "0.0.0" version alias to satisfy my-app/daml.yaml
+RUN if [ -d "/root/.daml/sdk/${SDK_VERSION}" ]; then \
+  ln -s /root/.daml/sdk/${SDK_VERSION} /root/.daml/sdk/0.0.0; \
+  fi
+
+WORKDIR /app
+
+COPY . /app
+
+# Download http-json-api jar (using 2.9.1 as stable standalone)
+RUN curl -fL https://github.com/digital-asset/daml/releases/download/v2.9.1/http-json-2.9.1.jar -o /app/http-json.jar
+
+CMD ["tail", "-f", "/dev/null"]

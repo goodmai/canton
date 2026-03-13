@@ -1,0 +1,7 @@
+.git
+canton/
+daml/
+logs/
+.daml/
+.idea/
+target/

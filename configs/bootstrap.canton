@@ -1,0 +1,6 @@
+logger.info("Bootstrap: Connecting to domain...")
+logger.info("Bootstrap: Initializing domain...")
+// Initialize the domain topology
+bootstrap.synchronizer_local("mydomain")
+participant1.synchronizers.connect_local(sequencer1, alias="mydomain")
+logger.info("Bootstrap: Connection command issued.")

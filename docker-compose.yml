@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  canton:
+    image: local/da-images/public/docker/canton-base:3.5.0-SNAPSHOT
+    container_name: canton-node
+    entrypoint: [ "bin/canton", "daemon", "-c", "/app/app.conf", "--bootstrap", "/app/bootstrap.sc", "--no-tty", "--log-level-stdout=INFO", "--log-file-appender=rolling" ]
+    volumes:
+      - ./configs/private-devnet.canton:/app/app.conf
+      - ./configs/bootstrap.canton:/app/bootstrap.sc
+      - ./logs:/app/log
+    ports:
+      - "5011:5011"
+      - "5012:5012"
+      - "5013:5013"
+      - "5018:5018"
+      - "5019:5019"
+    healthcheck:
+      test: [ "CMD", "grpcurl", "-plaintext", "localhost:5012", "grpc.health.v1.Health/Check" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  runner:
+    # Base service for manual tasks
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: daml-runner
+    depends_on:
+      canton:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    environment:
+      - DAML_LEDGER_HOST=canton
+      - DAML_LEDGER_PORT=5012
+    command: tail -f /dev/null
+
+  deploy:
+    # Service that runs deployment one-off
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: daml-deployer
+    depends_on:
+      canton:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    environment:
+      - DAML_LEDGER_HOST=canton
+      - DAML_LEDGER_PORT=5012
+    command: ./scripts/deploy-app.sh
+
+  test:
+    # Service that runs tests one-off, depends on deploy
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: daml-tester
+    depends_on:
+      deploy:
+        condition: service_completed_successfully
+      canton:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    environment:
+      - DAML_LEDGER_HOST=canton
+      - DAML_LEDGER_PORT=5012
+    command: ./scripts/test-transfer.sh
+  json-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: daml-json-api
+    depends_on:
+      canton:
+        condition: service_healthy
+    ports:
+      - "7575:7575"
+    environment:
+      - DAML_LEDGER_HOST=canton
+      - DAML_LEDGER_PORT=5012
+    command: >
+      java -jar /app/http-json.jar  --ledger-host canton  --ledger-port 5012  --http-port 7575  --allow-insecure-tokens  --address 0.0.0.0

@@ -1,0 +1,10 @@
+sdk-version: 0.0.0
+name: my-app-test
+source: daml
+version: 0.0.1
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+data-dependencies:
+  - ../main/.daml/dist/my-app-main-0.0.1.dar

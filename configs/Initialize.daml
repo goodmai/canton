@@ -1,0 +1,33 @@
+module Initialize where
+
+import Coin
+import Daml.Script
+import DA.List (find)
+import DA.Text (isInfixOf)
+
+-- Скрипт инициализации: Создает пользователей и выдает начальные монеты
+setup : Script ()
+setup = do
+  parties <- listKnownParties
+  let getOrAllocateParty alias = do
+        case find (\p -> alias `isInfixOf` (show p.party)) parties of
+          Some p -> return p.party
+          None -> allocatePartyWithHint alias (PartyIdHint alias)
+
+  -- Получаем идентификаторы Сторон (Parties) по подсказкам (Hints)
+  alice <- getOrAllocateParty "Alice"
+  bob <- getOrAllocateParty "Bob"
+  eva <- getOrAllocateParty "Eva"
+  
+  -- Получаем (или создаем) сторону Банка (эмитента)
+  bank <- getOrAllocateParty "Bank"
+
+  -- Банк выпускает 10 монет для Alice
+  -- Так как 'signatory' только Банк, Alice не обязана подписывать (но видит монету как observer)
+  submit bank do
+    createCmd Coin with
+      issuer = bank
+      owner = alice
+      amount = 10.0
+
+  return ()

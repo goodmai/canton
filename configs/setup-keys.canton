@@ -1,0 +1,28 @@
+// Скрипт ручного управления ключами (Key Management)
+// Запускается удаленно через консоль: canton -c remote.conf --script setup-keys.canton
+
+logger.info("Manual Key Setup: Starting key rotation process...")
+
+// 1. Генерация новых ключей (Signing & Encryption)
+// Мы генерируем новые ключи и сразу назначаем их ноде ('rotate').
+// Это безопасная процедура, которая обновляет топологию.
+
+logger.info("Rotating Node Keys (Signing & Encryption)...")
+val newKeys = participant1.keys.secret.rotate_node_keys()
+
+logger.info(s"Node keys rotated successfully.")
+logger.info(s"New Signing Key Fingerprint: ${newKeys.signing}")
+logger.info(s"New Encryption Key Fingerprint: ${newKeys.encryption}")
+
+// 2. Пример ручной генерации ключа пространства имен (Namespace Key)
+// (Только для демонстрации, обычно делается при инициализации, но можно добавить дополнительные корневые ключи)
+
+logger.info("Generating a standalone Namespace Root Key (demonstration)...")
+val newArk = participant1.keys.secret.generate_signing_key(name = "manual-ark")
+logger.info(s"Generated new ARK: ${newArk.fingerprint}")
+
+// Авторизация ключа в топологии (пример создания новой NamespaceDelegation)
+// val ns = Namespace(newArk.fingerprint)
+// logger.info(s"New Namespace created: $ns")
+
+logger.info("Manual Key Setup: Completed.")

@@ -1,0 +1,41 @@
+module Coin where
+
+-- Шаблон Монеты (Coin)
+-- Владелец может переводить часть суммы новому владельцу.
+template Coin
+  with
+    issuer : Party   -- Эмитент (Банк)
+    owner : Party    -- Владелец
+    amount : Decimal -- Сумма
+  where
+    -- Эмитент является подписантом (гарантом). 
+    -- Это позволяет владельцу создавать новые монеты (результат перевода) с тем же эмитентом.
+    signatory issuer
+    -- Владелец видит монету (наблюдатель).
+    observer owner
+
+    -- Выбор "Перевести" (Transfer)
+    choice Transfer : (ContractId Coin, Optional (ContractId Coin))
+      with
+        newOwner : Party      -- Новый владелец
+        transferAmount : Decimal -- Сумма перевода
+      controller owner -- Выбор делает текущий владелец
+      do
+        -- Проверки: сумма перевода > 0 и не превышает баланс
+        assert (transferAmount > 0.0)
+        assert (transferAmount <= amount)
+        
+        -- Создаем монету для нового владельца
+        sentCid <- create this with
+          owner = newOwner
+          amount = transferAmount
+          
+        -- Если есть остаток, создаем монету для себя (сдачи)
+        remainderCid <- if transferAmount < amount
+          then do
+            cid <- create this with amount = amount - transferAmount
+            return (Some cid)
+          else return None
+          
+        -- Возвращаем идентификаторы новых контрактов
+        return (sentCid, remainderCid)

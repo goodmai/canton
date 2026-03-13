@@ -1,0 +1,46 @@
+// Bootstrap Script for Canton 3.x
+// Запускается удаленно: canton -c remote.conf --script setup-users.canton
+
+logger.info("Bootstrap: Initializing connectivity...")
+
+// 1. Подключение к домену (Sequencer)
+// Используем try-catch для идемпотентности (если уже подключен)
+try {
+  // Проверка соединения не всегда тривиальна в скрипте, просто пытаемся подключиться.
+  // Если подключение уже существует, Canton может выдать предупреждение или ошибку, которую мы обработаем.
+  participant1.domains.connect("domain1", "http://localhost:5018")
+  logger.info("Connected to domain1.")
+} catch {
+  case e: Throwable => 
+    logger.info(s"Connection attempt finished (might be already connected): ${e.getMessage}")
+}
+
+logger.info("Setting up parties and users...")
+
+// 2. Создание Сторон (Parties)
+val alice = participant1.parties.enable("Alice")
+val bob = participant1.parties.enable("Bob")
+val eva = participant1.parties.enable("Eva")
+val bank = participant1.parties.enable("Bank") // Добавляем Bank для Initialize.daml
+
+// 3. Создание Пользователей (Users)
+// Функция-хелпер для безопасного создания
+def getOrCreateUser(alias: String, party: PartyId) = {
+  try {
+    participant1.ledger_api.users.create(
+      id = alias,
+      actAs = Set(party),
+      primaryParty = Some(party)
+    )
+    logger.info(s"User $alias created.")
+  } catch {
+     case e: Throwable => logger.info(s"User $alias already exists.")
+  }
+}
+
+getOrCreateUser("alice", alice)
+getOrCreateUser("bob", bob)
+getOrCreateUser("eva", eva)
+getOrCreateUser("bank", bank)
+
+logger.info("Bootstrap complete: Users and Connectivity set up.")
